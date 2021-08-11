@@ -183,7 +183,7 @@ class Referencer {
 
         /** @var \Drupal\common\Resource $stored */
         $stored = $this->getFileMapper()->get($info[0]->identifier, Resource::DEFAULT_SOURCE_PERSPECTIVE);
-        $downloadUrl = $this->handleExistingResource($info, $stored);
+        $downloadUrl = $this->handleExistingResource($info, $stored, $mimeType);
       }
     }
 
@@ -193,9 +193,13 @@ class Referencer {
   /**
    * Private.
    */
-  private function handleExistingResource($info, $stored) {
-    if ($info[0]->perspective == Resource::DEFAULT_SOURCE_PERSPECTIVE && resource_mapper_new_revision() == 1) {
+  private function handleExistingResource($info, $stored, $mimeType) {
+    if ($info[0]->perspective == Resource::DEFAULT_SOURCE_PERSPECTIVE &&
+      (resource_mapper_new_revision() == 1 || $stored->mimetype != $mimeType)) {
       $new = $stored->createNewVersion();
+      // Update the MIME type, since this may be updated by the user.
+      $new->changeMimeType($mimeType);
+
       $this->getFileMapper()->registerNewVersion($new);
       $downloadUrl = $new->getUniqueIdentifier();
     }
